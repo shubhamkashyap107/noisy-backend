@@ -39,7 +39,7 @@ router.post("/send/:status/:id", isLoggedIn, async(req, res) => {
                 status : status
         })
         await newReq.save()
-        res.json({"msg" : "OKAY"})
+        res.status(201).json({"msg" : "OKAY"})
     } catch (error) {
         res.json({"error" : error.message})
         
@@ -72,7 +72,7 @@ router.patch("/review/:status/:connectionRequestID", isLoggedIn , async(req, res
         foundReq.status = status
         await foundReq.save()
 
-        res.json({msg : `request ${status}`})
+        res.status(201).json({msg : `request ${status}`})
     } catch (error) {
         res.json({error : error.message})
     }

@@ -16,11 +16,13 @@ router.post("/signup" ,async(req, res) => {
             throw new Error("Please Enter a strong password")
         }
         const hashedPassword = await bcrypt.hash(password, 10)
-        await User.insertOne({username, emailId, password : hashedPassword})
-        res.status(200).json({"msg" : "User registered successfully"})
+        let createdUser = await User.insertOne({username, emailId, password : hashedPassword})
+        const token = createdUser.getJWT()
+        res.cookie("token", token)
+        res.status(200).json({"msg" : "User registered successfully", data : createdUser})
     } catch(e)
     {
-        res.status(400).json({"msg" : e.message})
+        res.status(400).json({"msg" : "User already exists"})
     }
 })
 
@@ -36,14 +38,19 @@ router.post("/login", async(req, res) => {
         const flag = await bcrypt.compare(password, FoundUser.password)
         if(flag)
         {
-            const token = jwt.sign({_id : FoundUser._id}, process.env.JWT_SECRET, {
-                expiresIn : "7d"
-            })
-            res.cookie("token", token).json({"msg" : "User logged in successfully"})
+            // const token = jwt.sign({_id : FoundUser._id}, process.env.JWT_SECRET, {
+            //     expiresIn : "7d"
+            // })
+            const token = FoundUser.getJWT()
+            // console.log("OK")
+            const{firstName, lastName, image, bio, username, DOB, _id} = FoundUser
+            res.cookie("token", token).json({"msg" : "User logged in successfully", data : {
+                firstName, lastName, image, bio, username, DOB, _id
+            }})
         }
         else
         {
-            res.json({"msg" : "Invalid Credentials"})
+            res.status(401).json({"msg" : "Invalid Credentials"})
         }
     } catch (error) {
         res.json({"error" : "Please enter all the fields"})
